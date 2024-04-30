@@ -19,14 +19,14 @@ jobs:   # Telling what jobs we need to happen
     steps:
       #1 checkout repository
       - name: Checkout Repository
-        uses: actions/checkout@v3  # Here we use a pre-created action called checkout
+        uses: actions/checkout@v4  # Here we use a pre-created action called checkout
 
       #2 Setup Jave
-      - name: Set Up Jave
-        uses: actions/setup-java@v3.12.0
+      - name: Set Up Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'oracle'
-          java-version: '17'
+          java-version: '21'
 
       #3 set up flutter
       - name: Set Up Flutter
