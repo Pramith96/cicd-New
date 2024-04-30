@@ -1,0 +1,79 @@
+name: "Build $ release"
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - test
+  push:
+    branches:
+      - dev
+      - test
+
+jobs:   # Telling what jobs we need to happen
+  build:  # Specify the building name and machine
+    name: Build & Release # you can name the build whatever you want
+    runs-on: macos-latest  # device we want our code to run on ( macos - ubuntu - windows )
+    # here we selected macos-latest to be able to get ios build
+
+    steps:
+      #1 checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3  # Here we use a pre-created action called checkout
+
+      #2 Setup Jave
+      - name: Set Up Jave
+        uses: actions/setup-java@v3.12.0
+        with:
+          distribution: 'oracle'
+          java-version: '17'
+
+      #3 set up flutter
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.13.0'
+          channel: 'stable'
+
+      #4 install dependencies
+      - name: Install Dependencies
+        run: flutter pub get
+
+      #5 run test
+      - name: Test flutter App
+        run: flutter test
+
+      #6 Build APK
+      - name: Build APK
+        run: flutter build apk --release
+
+      #7 Build Aab
+      - name: Build App bundle
+        run: flutter build apppbundle
+
+      #8 build ipa
+      - name: Build IPA
+        run: flutter build ipa --no-codesign
+      - name: Compress Archives and IPAs
+        run:
+          cd build
+          tar -czf ios_build.tar.gz ios
+
+      #9 get those build to be available to download
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Releases
+          path:
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+            build/ios_build.tar.gz
+
+      #10 create release with those builds
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/flutter-apk/app-release.apk,build/app/outputs/bundle/release/app-release.aab,build/ios_build.tar.gz"
+          tag: V1.0.${{github.run_number}}
+          token: ${{secrets.TOKEN}}
+
